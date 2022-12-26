@@ -1,41 +1,15 @@
 const Work = require('../models/work');
-const {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-  DeleteObjectCommand,
-} = require('@aws-sdk/client-s3');
-const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
-const crypto = require('crypto');
+const { PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const s3 = require('../config/s3');
+const { randomImageName, getImageUrl } = require('../utils');
 
-const bucketName = process.env.AWS_BUCKET_NAME;
-const region = process.env.AWS_BUCKET_REGION;
-const accessKeyId = process.env.AWS_ACCESS_KEY;
-const secretAccessKey = process.env.AWS_SECRET_KEY;
-
-const s3 = new S3Client({
-  credentials: {
-    accessKeyId,
-    secretAccessKey,
-  },
-  region,
-});
-
-const randomImageName = (bytes = 32) =>
-  crypto.randomBytes(bytes).toString('hex');
+const bucketName = process.env.APP_AWS_BUCKET_NAME;
 
 const getWorks = async (req, res) => {
   const works = await Work.find().lean();
 
   for (const work of works) {
-    const params = {
-      Bucket: bucketName,
-      Key: work.thumbnail,
-    };
-
-    const command = new GetObjectCommand(params);
-    const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
-    work.thumbnailUrl = url;
+    work.thumbnailUrl = await getImageUrl(work.thumbnail);
   }
 
   res.json(works);
@@ -67,14 +41,7 @@ const createWork = async (req, res) => {
 const getWork = async (req, res) => {
   const work = await Work.findById(req.params.id).lean();
 
-  const params = {
-    Bucket: bucketName,
-    Key: work.thumbnail,
-  };
-
-  const command = new GetObjectCommand(params);
-  const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
-  work.thumbnailUrl = url;
+  work.thumbnailUrl = await getImageUrl(work.thumbnail);
 
   res.json(work);
 };
