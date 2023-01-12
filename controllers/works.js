@@ -6,80 +6,105 @@ const { randomImageName, getImageUrl } = require('../utils');
 const bucketName = process.env.APP_AWS_BUCKET_NAME;
 
 const getWorks = async (req, res) => {
-  const works = await Work.find().lean();
+  try {
+    const works = await Work.find().lean();
 
-  for (const work of works) {
-    work.thumbnailUrl = await getImageUrl(work.thumbnail);
+    for (const work of works) {
+      work.thumbnailUrl = await getImageUrl(work.thumbnail);
+    }
+
+    res.json(works);
+  } catch (e) {
+    console.log(e.message);
+    res.status(400).json({ message: e.message });
   }
-
-  res.json(works);
 };
 
 const createWork = async (req, res) => {
-  const body = req.body;
+  try {
+    const body = req.body;
 
-  if (req.file) {
-    const thumbnailName = randomImageName();
+    if (req.file) {
+      const thumbnailName = randomImageName();
 
-    const params = {
-      Bucket: bucketName,
-      Key: thumbnailName,
-      Body: req.file.buffer,
-      ContentType: req.file.mimetype,
-    };
+      const params = {
+        Bucket: bucketName,
+        Key: thumbnailName,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype,
+      };
 
-    const command = new PutObjectCommand(params);
-    await s3.send(command);
-    body.thumbnail = thumbnailName;
+      const command = new PutObjectCommand(params);
+      await s3.send(command);
+      body.thumbnail = thumbnailName;
+    }
+
+    const work = await Work.create(body);
+
+    res.json(work);
+  } catch (e) {
+    console.log(e.message);
+    res.status(400).json(e.errors);
   }
-
-  const work = await Work.create(body);
-
-  res.json(work);
 };
 
 const getWork = async (req, res) => {
-  const work = await Work.findById(req.params.id).lean();
+  try {
+    const work = await Work.findById(req.params.id).lean();
 
-  work.thumbnailUrl = await getImageUrl(work.thumbnail);
+    work.thumbnailUrl = await getImageUrl(work.thumbnail);
 
-  res.json(work);
+    res.json(work);
+  } catch (e) {
+    console.log(e.message);
+    res.status(400).json({ message: e.message });
+  }
 };
 
 const updateWork = async (req, res) => {
-  const body = req.body;
+  try {
+    const body = req.body;
 
-  if (req.file) {
-    const { thumbnail } = await Work.findById(req.params.id);
+    if (req.file) {
+      const { thumbnail } = await Work.findById(req.params.id);
 
-    const params = {
-      Bucket: bucketName,
-      Key: thumbnail,
-      Body: req.file.buffer,
-      ContentType: req.file.mimetype,
-    };
+      const params = {
+        Bucket: bucketName,
+        Key: thumbnail,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype,
+      };
 
-    const command = new PutObjectCommand(params);
-    await s3.send(command);
+      const command = new PutObjectCommand(params);
+      await s3.send(command);
+    }
+
+    await Work.findByIdAndUpdate(req.params.id, body);
+    res.sendStatus(200);
+  } catch (e) {
+    console.log(e.message);
+    res.status(400).json(e.errors);
   }
-
-  await Work.findByIdAndUpdate(req.params.id, body);
-  res.sendStatus(200);
 };
 
 const deleteWork = async (req, res) => {
-  const work = await Work.findById(req.params.id);
+  try {
+    const work = await Work.findById(req.params.id);
 
-  const params = {
-    Bucket: bucketName,
-    Key: work.thumbnail,
-  };
+    const params = {
+      Bucket: bucketName,
+      Key: work.thumbnail,
+    };
 
-  const command = new DeleteObjectCommand(params);
-  await s3.send(command);
+    const command = new DeleteObjectCommand(params);
+    await s3.send(command);
 
-  await work.remove();
-  res.sendStatus(200);
+    await work.remove();
+    res.sendStatus(200);
+  } catch (e) {
+    console.log(e.message);
+    res.status(400).json(e.errors);
+  }
 };
 
 module.exports = {

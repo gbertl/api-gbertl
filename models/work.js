@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
 
 const schema = mongoose.Schema({
-  thumbnail: String,
-  title: String,
-  text: String,
-  category: String,
-  source: String,
-  liveUrl: String,
+  thumbnail: { type: String, required: [true, 'Thumbnail is required'] },
+  title: { type: String, required: [true, 'Title is required'] },
+  text: { type: String, required: [true, 'Text is required'] },
+  category: { type: String, required: [true, 'Category is required'] },
+  source: { type: String },
+  liveUrl: { type: String },
 });
 
 module.exports = mongoose.model('Work', schema);
