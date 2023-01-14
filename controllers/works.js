@@ -7,7 +7,13 @@ const bucketName = process.env.APP_AWS_BUCKET_NAME;
 
 const getWorks = async (req, res) => {
   try {
-    const works = await Work.find().lean();
+    let query = Work.find().lean();
+
+    if (req.query.sort) {
+      query = query.sort(req.query.sort);
+    }
+
+    const works = await query;
 
     for (const work of works) {
       work.thumbnailUrl = await getImageUrl(work.thumbnail);

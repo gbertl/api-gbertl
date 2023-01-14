@@ -7,6 +7,11 @@ const schema = mongoose.Schema({
   category: { type: String, required: [true, 'Category is required'] },
   source: { type: String },
   liveUrl: { type: String },
+  priorityOrder: {
+    type: Number,
+    required: [true, 'Priority order is required'],
+    min: [1, 'Invalid priority order'],
+  },
 });
 
 module.exports = mongoose.model('Work', schema);
