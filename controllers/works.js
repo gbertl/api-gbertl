@@ -71,12 +71,14 @@ const updateWork = async (req, res) => {
   try {
     const body = req.body;
 
-    if (req.file) {
-      const { thumbnail } = await Work.findById(req.params.id);
+    const work = await Work.findByIdAndUpdate(req.params.id, body, {
+      runValidators: true,
+    });
 
+    if (req.file) {
       const params = {
         Bucket: bucketName,
-        Key: thumbnail,
+        Key: work.thumbnail,
         Body: req.file.buffer,
         ContentType: req.file.mimetype,
       };
@@ -85,7 +87,6 @@ const updateWork = async (req, res) => {
       await s3.send(command);
     }
 
-    await Work.findByIdAndUpdate(req.params.id, body);
     res.sendStatus(200);
   } catch (e) {
     console.log(e.message);
