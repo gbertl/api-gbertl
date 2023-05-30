@@ -12,7 +12,7 @@ const corsOrigins = process.env.CORS_ORIGINS.split(',');
 app.use(cors({ origin: corsOrigins }));
 app.use(express.json());
 
-app.use('/api/works', worksRoutes);
+app.use('/works', worksRoutes);
 
 connectDB()
   .then(() => {
