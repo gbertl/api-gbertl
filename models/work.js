@@ -7,6 +7,11 @@ const schema = mongoose.Schema({
   category: { type: String, required: [true, 'Category is required'] },
   source: { type: String },
   liveUrl: { type: String },
+  type: {
+    type: String,
+    enum: ['featured', 'upwork', 'personal'],
+    default: 'featured',
+  },
   priorityOrder: {
     type: Number,
     required: [true, 'Priority order is required'],
